@@ -1,4 +1,5 @@
 import axios, { all } from 'axios'
+import { input } from '@inquirer/prompts'
 import { parse } from 'node-html-parser'
 import fs from 'fs';
 import path from 'path';
@@ -21,7 +22,8 @@ const saveImageFromUrl = async (url, name) => {
       writer.on('error', reject);
     });
   } catch (err) {
-    console.error("Error Downloading: ", "The site didn't allow scraping");
+    console.error("Error Downloading: ");
+    console.log("The site blocked scraping or no images found")
   }
 };
 
@@ -33,11 +35,11 @@ const getData = async (site) => {
     allImages.forEach((image, index) => {
       const img = image.getAttribute('src')
       if (img) {
-        console.log("Image found: ", img)
-        const fileName = `image_${index}`
+        const name = image.getAttribute('alt')
+        console.log("Image found: ", name)
         console.log(`Link: ${site}${img}`)
         const imgSrc = `${img}`
-        saveImageFromUrl(imgSrc, fileName);
+        saveImageFromUrl(imgSrc, name);
       }
     })
   } catch (err) {
@@ -45,5 +47,13 @@ const getData = async (site) => {
   }
 }
 
-console.log(process.argv[2])
-getData(process.argv[2])
+(async () => {
+  if (process.argv[2]) {
+    getData(process.argv[2])
+  } else {
+    const url = await input({
+      message: "Enter URL: "
+    })
+    getData(url);
+  }
+})();
